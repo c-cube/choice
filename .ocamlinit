@@ -1,0 +1,5 @@
+#directory "_build";;
+#load "choice.cma";;
+open Choice.Infix;;
+(* vim:filetype=ocaml:
+*)
