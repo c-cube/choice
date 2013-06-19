@@ -98,7 +98,10 @@ let ite c th el =
   | Some (val_c, c') ->
     mplus (th val_c) (c' >>= th)
 
-let guard p c =
+let map c f =
+  {skf=(fun sk fk -> c.skf (fun x -> sk (f x)) fk)}
+
+let filter c p =
   c >>= fun val_c -> if p val_c then return val_c else fail
 
 let once a =

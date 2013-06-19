@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (** This is an attempt to implement the Logic monad, as described
     in {{: http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html}
-    the Haskell library}
+    this Haskell library}
     or in {{: http://www.cs.rutgers.edu/~ccshan/logicprog/LogicT-icfp2005.pdf} this paper}.
     *)
 
@@ -63,7 +63,10 @@ val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
       then it behaves like [el], otherwise each solution of [c] is
       given to [th]. *)
 
-val guard : ('a -> bool) -> 'a t -> 'a t
+val map : 'a t -> ('a -> 'b) -> 'b t
+  (** Map solutions *)
+
+val filter : 'a t -> ('a -> bool) -> 'a t
   (** Only keep the solutions that satisfy the given predicate *)
 
 val once : 'a t -> 'a t
