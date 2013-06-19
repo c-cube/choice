@@ -138,7 +138,7 @@ let run_n n c =
         (fun val_c fk ->
           l := val_c :: !l;
           decr n;
-          if !n > 0 then () else fk ())
+          if !n = 0 then () else fk ())
         (fun () -> ());
       !l
     end
