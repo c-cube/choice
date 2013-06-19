@@ -43,11 +43,10 @@ let return x = { skf = (fun sk fk -> sk x fk) }
 let fail = { skf = fun sk fk -> fk () }
 
 let mplus a b =
-  let my_fun sk fk =
-    let fk' () = b.skf sk fk in
-    a.skf sk fk'
-  in
-  { skf=my_fun }
+  { skf=(fun sk fk ->
+    let fk' () = b.skf sk fk in  (* on failure of a, try b *)
+    a.skf sk fk')
+  }
 
 let of_list l = match l with
   | [] -> fail
@@ -59,8 +58,8 @@ let delay f =
 
 let bind x f =
   { skf=
-    (fun sk ->
-      x.skf (fun val_x -> (f val_x).skf sk))
+    (fun sk fk ->
+      x.skf (fun val_x fk -> (f val_x).skf sk fk) fk)
   }
 
 let (>>=) = bind
@@ -69,12 +68,19 @@ let rec from_fun f =
   match f () with
   | None -> fail
   | Some x ->
-    return x >>= fun x -> mplus (return x) (from_fun f)
+    { skf=(fun sk fk ->
+      let fk' () = (from_fun f).skf sk fk in
+      sk x fk')
+    }
 
 (* reflect operator, the inverse of msplit *)
 let reflect opt = match opt with
   | None -> fail
-  | Some (x, c) -> mplus (return x) c
+  | Some (x, c) ->
+    { skf=(fun sk fk ->
+      let fk' () = c.skf sk fk in
+      sk x fk')
+    }
 
 (* msplit operator, the base for other combinators. It returns
     the first solution, if any. *)
@@ -87,7 +93,11 @@ let rec interleave a b =
   msplit a >>= function
   | None -> b
   | Some (val_a, a') ->
-    mplus (return val_a) (interleave b a')
+    let c = interleave b a' in
+    { skf=(fun sk fk ->
+      let fk' () = c.skf sk fk in
+      sk val_a fk')
+    }
   
 let rec fair_bind x f =
   msplit x >>= function
