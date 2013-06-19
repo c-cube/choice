@@ -25,12 +25,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (** {1 Backtracking monad} *)
 
-(** This is an attempt to implement the Logic monad, as described
-    in {{: http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html}
-    the Haskell library}
-    or in {{: http://www.cs.rutgers.edu/~ccshan/logicprog/LogicT-icfp2005.pdf} this paper}.
-    *)
-
 (** A choice among values of type 'a. It is implemented using a
     success continuation, and a failure continuation
     (SKFT is Success Failure Kontinuation) *)
@@ -110,6 +104,12 @@ let ite c th el =
 let map c f =
   {skf=(fun sk fk -> c.skf (fun x -> sk (f x)) fk)}
 
+let fmap c f =
+  bind c
+    (fun x -> match f x with
+    | None -> fail
+    | Some y -> return y)
+
 let filter c p =
   c >>= fun val_c -> if p val_c then return val_c else fail
 
@@ -118,6 +118,16 @@ let once a =
   | None -> fail
   | Some (val_c, _) ->
     return val_c
+
+let rec take n c = match n with
+  | 0 -> fail
+  | 1 -> c
+  | _ ->
+    assert (n > 0);
+    msplit c >>= function
+    | None -> fail
+    | Some (val_c, c') ->
+      mplus (return val_c) (take (n-1) c')
 
 let run_one c =
   let r = ref None in

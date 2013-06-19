@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     in {{: http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html}
     this Haskell library}
     or in {{: http://www.cs.rutgers.edu/~ccshan/logicprog/LogicT-icfp2005.pdf} this paper}.
+
+    Some design choices are slightly different, since OCaml is strict.
+    Performance may also vary from ghc-compiled code, since it performs some
+    optimizations like deforestation.
     *)
 
 (* TODO examples, and more detailed doc *)
@@ -39,10 +43,11 @@ type 'a t
 (** {2 Combinators} *)
 
 val return : 'a -> 'a t
-  (** Return a value, with success *)
+  (** Return a value, and succeed *)
 
 val of_list : 'a list -> 'a t
-  (** Multiple return *)
+  (** Multiple returns. Each element of the list is a candidate
+      for success. *)
 
 val from_fun : (unit -> 'a option) -> 'a t
   (** Call the function to get alternative choices *)
@@ -52,20 +57,21 @@ val delay : (unit -> 'a t) -> 'a t
       that uses the choice point *)
 
 val fail : 'a t
-  (** Fail to yield a solution *)
+  (** Fail to yield a solution. *)
 
 val mplus : 'a t -> 'a t -> 'a t
   (** [mplus a b] enumerates choices from [a], then choices from [b]. *)
 
 val bind : 'a t -> ('a -> 'b t) -> 'b t
   (** Monadic bind. Each solution of the first argument is given to the
-      function that returns potentially several choices. *)
+      function, that may in turn return several choices. *)
 
 val interleave : 'a t -> 'a t -> 'a t
-  (** Same as {!mplus}, but fair *)
+  (** Same as {!mplus}, but fair, ie it enumerates solutions
+      alternatively from its first and second arguments. *)
 
 val fair_bind : 'a t -> ('a -> 'b t) -> 'b t
-  (** Fair version of {!bind} *)
+  (** Fair version of {!bind}. *)
 
 val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
   (** [ift c th el] enumerates the choices of [c]. If [c] fails,
@@ -73,18 +79,25 @@ val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
       given to [th]. *)
 
 val map : 'a t -> ('a -> 'b) -> 'b t
-  (** Map solutions *)
+  (** Map solutions to other solutions *)
+
+val fmap : 'a t -> ('a -> 'b option) -> 'b t
+  (** Special case of {! bind}, with only zero or one possible
+      output choices for each input choice. *)
 
 val filter : 'a t -> ('a -> bool) -> 'a t
-  (** Only keep the solutions that satisfy the given predicate *)
+  (** Only keep the solutions that satisfy the given predicate. *)
 
 val once : 'a t -> 'a t
-  (** Retains at most one solution *)
+  (** Retain at most one solution. *)
+
+val take : int -> 'a t -> 'a t
+  (** Retain at most [n] solutions *)
 
 (** {2 Enumerate solutions} *)
 
 val run_one : 'a t -> 'a option
-  (** Run until we get one answer *)
+  (** Run until we get one answer (or a failure) *)
 
 val run_n : int -> 'a t -> 'a list
   (** The [n] first solutions, in {b reverse b} order. *)
