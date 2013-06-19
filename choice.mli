@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     or in {{: http://www.cs.rutgers.edu/~ccshan/logicprog/LogicT-icfp2005.pdf} this paper}.
     *)
 
+(* TODO examples, and more detailed doc *)
+
 type 'a t
   (** A choice among values of type 'a *)
 
@@ -41,6 +43,9 @@ val return : 'a -> 'a t
 
 val of_list : 'a list -> 'a t
   (** Multiple return *)
+
+val from_fun : (unit -> 'a option) -> 'a t
+  (** Call the function to get alternative choices *)
 
 val fail : 'a t
   (** Fail to yield a solution *)

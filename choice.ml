@@ -68,6 +68,12 @@ let bind x f =
 
 let (>>=) = bind
 
+let rec from_fun f =
+  match f () with
+  | None -> fail
+  | Some x ->
+    return x >>= fun x -> mplus (return x) (from_fun f)
+
 (* reflect operator, the inverse of msplit *)
 let reflect opt = match opt with
   | None -> fail
