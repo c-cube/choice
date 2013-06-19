@@ -33,9 +33,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     Some design choices are slightly different, since OCaml is strict.
     Performance may also vary from ghc-compiled code, since it performs some
     optimizations like deforestation.
-    *)
 
-(* TODO examples, and more detailed doc *)
+    {3 Example}
+
+    We adapt the example from the LogicT paper.
+
+{[open Infix;;
+let rec insert e l = match l with
+  | [] -> return [e]
+  | x::l' ->
+    mplus
+      (return (e :: l))
+      (insert e l' >>= fun l'' -> return (x :: l''));;
+
+let rec permute = function
+  | [] -> return []
+  | x::l ->
+    permute l >>= fun l' ->
+    insert x l';;
+
+let rec sorted l = match l with
+  | [] | [_] -> true
+  | x::((y::l') as l) ->
+    x <= y && sorted l;;
+
+let bogosort l =
+  once (filter (permute l) sorted);;
+  ]}
+
+  Then, running
+  {[run_n 1 (bogosort [2;3;5;1;0]);; ]}
+  yields 
+  {[- : int list list = [[0; 1; 2; 3; 5]] ]}
+    *)
 
 type 'a t
   (** A choice among values of type 'a *)
