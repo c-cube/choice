@@ -47,6 +47,10 @@ val of_list : 'a list -> 'a t
 val from_fun : (unit -> 'a option) -> 'a t
   (** Call the function to get alternative choices *)
 
+val delay : (unit -> 'a t) -> 'a t
+  (** Delay the computation (the closure will be called in each branch
+      that uses the choice point *)
+
 val fail : 'a t
   (** Fail to yield a solution *)
 

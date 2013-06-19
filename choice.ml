@@ -60,6 +60,9 @@ let of_list l = match l with
   | x::l' ->
     List.fold_left (fun acc x -> mplus acc (return x)) (return x) l'
 
+let delay f =
+  { skf=(fun sk fk -> (f ()).skf sk fk) }
+
 let bind x f =
   { skf=
     (fun sk ->
