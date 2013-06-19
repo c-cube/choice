@@ -21,10 +21,13 @@ clean:
 install:
 	ocamlfind install choice META $(INSTALL)
 
+push_doc: all
+	scp -r choice.docdir/* cedeela.fr:~/simon/root/software/choice/
+
 uninstall:
 	ocamlfind remove choice
 
 tags:
 	otags *.ml *.mli
 
-.PHONY: all clean tests tags
+.PHONY: all clean tests tags push_doc
