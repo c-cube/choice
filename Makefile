@@ -1,7 +1,7 @@
 INTERFACE_FILES = $(shell find -name '*.mli')
 IMPLEMENTATION_FILES = $(shell find -name '*.ml')
 
-TARGETS_LIB = choice.cmxa choice.cma choice.cmxs
+TARGETS_LIB = choice.cmxa choice.cma choice.a choice.cmi choice.cmxs
 TARGETS_DOC = choice.docdir/index.html
 INSTALL = $(addprefix _build/, $(TARGETS_LIB)) choice.mli
 
