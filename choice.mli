@@ -89,6 +89,16 @@ val iter : 'a t -> ('a -> bool) -> unit
   (** Enumerate solutions, until none remains, or the callback returns [false]
       to signal it has had enough solutions *)
 
+(** {2 Monadic operators} *)
+
+val lift : ('a -> 'b) -> 'a t -> 'b t
+
+val lift2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+
+val liftFair : ('a -> 'b) -> 'a t -> 'b t
+
+val liftFair2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+
 (** {2 Infix operators} *)
 
 module Infix : sig

@@ -128,8 +128,20 @@ let run_one c =
   with Exit ->
     !r
 
-let run_n c =
-  failwith "Choice.run_n: not implemented"
+let run_n n c =
+  if n = 0
+    then []
+    else begin
+      let l = ref []
+      and n = ref n in
+      c.skf
+        (fun val_c fk ->
+          l := val_c :: !l;
+          decr n;
+          if !n > 0 then () else fk ())
+        (fun () -> ());
+      !l
+    end
 
 let iter c k =
   c.skf
@@ -144,3 +156,17 @@ module Infix = struct
   let (++) = mplus
   let (<|>) = interleave
 end
+
+open Infix
+
+let lift f c =
+  c >>= fun x -> return (f x)
+
+let lift2 f a b =
+  a >>= fun x -> b >>= fun y -> return (f x y)
+
+let liftFair f c =
+  c >>- fun x -> return (f x)
+
+let liftFair2 f a b =
+  a >>- fun x -> b >>- fun y -> return (f x y)
