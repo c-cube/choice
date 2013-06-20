@@ -179,8 +179,17 @@ let iter c k =
   c.skf
     (fun val_c fk ->
       let continue = k val_c in
-      if continue then () else fk ())
+      if continue then fk () else ())
     (fun () -> ())
+
+let run_all c =
+  let l = ref [] in
+  c.skf
+    (fun val_c fk ->
+      l := val_c :: !l;
+      fk ())
+    (fun () -> ());
+  !l
 
 module Infix = struct
   let (>>=) = bind

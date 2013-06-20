@@ -138,7 +138,10 @@ val run_one : 'a t -> 'a option
   (** Run until we get one answer (or a failure) *)
 
 val run_n : int -> 'a t -> 'a list
-  (** The [n] first solutions, in {b reverse b} order. *)
+  (** The [n] first solutions, in {b reverse} order. *)
+
+val run_all : 'a t -> 'a list
+  (** All the solutions (in reverse order) *)
 
 val iter : 'a t -> ('a -> bool) -> unit
   (** Enumerate solutions, until none remains, or the callback returns [false]
