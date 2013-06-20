@@ -109,8 +109,8 @@ val fair_bind : 'a t -> ('a -> 'b t) -> 'b t
   (** Fair version of {!bind}. *)
 
 val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
-  (** [ift c th el] enumerates the choices of [c]. If [c] fails,
-      then it behaves like [el], otherwise each solution of [c] is
+  (** [ite cond th el] enumerates the choices of [cond]. If [cond] fails,
+      then it behaves like [el], otherwise each solution of [cond] is
       given to [th]. *)
 
 val map : 'a t -> ('a -> 'b) -> 'b t
