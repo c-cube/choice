@@ -18,6 +18,9 @@ doc:
 clean:
 	ocamlbuild -clean
 
+tests:
+	ocamlbuild -package oUnit $(OPTIONS) tests/run_tests.native
+
 install:
 	ocamlfind install choice META $(INSTALL)
 
@@ -30,4 +33,4 @@ uninstall:
 tags:
 	otags *.ml *.mli
 
-.PHONY: all clean tests tags push_doc
+.PHONY: all clean tests tags push_doc tests

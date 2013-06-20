@@ -114,6 +114,15 @@ let ite c th el =
 let map c f =
   {skf=(fun sk fk -> c.skf (fun x -> sk (f x)) fk)}
 
+let product a b =
+  {skf=(fun sk fk ->
+    a.skf
+      (fun x fk' ->
+        let sk' y fk' = sk (x,y) fk' in
+        b.skf sk' fk')
+      fk)
+  }
+
 let fmap c f =
   bind c
     (fun x -> match f x with
@@ -170,8 +179,17 @@ let iter c k =
   c.skf
     (fun val_c fk ->
       let continue = k val_c in
-      if continue then () else fk ())
+      if continue then fk () else ())
     (fun () -> ())
+
+let run_all c =
+  let l = ref [] in
+  c.skf
+    (fun val_c fk ->
+      l := val_c :: !l;
+      fk ())
+    (fun () -> ());
+  !l
 
 module Infix = struct
   let (>>=) = bind

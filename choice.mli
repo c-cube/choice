@@ -109,12 +109,15 @@ val fair_bind : 'a t -> ('a -> 'b t) -> 'b t
   (** Fair version of {!bind}. *)
 
 val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
-  (** [ift c th el] enumerates the choices of [c]. If [c] fails,
-      then it behaves like [el], otherwise each solution of [c] is
+  (** [ite cond th el] enumerates the choices of [cond]. If [cond] fails,
+      then it behaves like [el], otherwise each solution of [cond] is
       given to [th]. *)
 
 val map : 'a t -> ('a -> 'b) -> 'b t
   (** Map solutions to other solutions *)
+
+val product : 'a t -> 'b t -> ('a * 'b) t
+  (** Cartesian product of two choices *)
 
 val fmap : 'a t -> ('a -> 'b option) -> 'b t
   (** Special case of {! bind}, with only zero or one possible
@@ -136,6 +139,9 @@ val run_one : 'a t -> 'a option
 
 val run_n : int -> 'a t -> 'a list
   (** The [n] first solutions, in {b reverse} order. *)
+
+val run_all : 'a t -> 'a list
+  (** All the solutions (in reverse order) *)
 
 val iter : 'a t -> ('a -> bool) -> unit
   (** Enumerate solutions, until none remains, or the callback returns [false]
