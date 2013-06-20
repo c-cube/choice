@@ -116,6 +116,9 @@ val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
 val map : 'a t -> ('a -> 'b) -> 'b t
   (** Map solutions to other solutions *)
 
+val product : 'a t -> 'b t -> ('a * 'b) t
+  (** Cartesian product of two choices *)
+
 val fmap : 'a t -> ('a -> 'b option) -> 'b t
   (** Special case of {! bind}, with only zero or one possible
       output choices for each input choice. *)

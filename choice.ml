@@ -114,6 +114,15 @@ let ite c th el =
 let map c f =
   {skf=(fun sk fk -> c.skf (fun x -> sk (f x)) fk)}
 
+let product a b =
+  {skf=(fun sk fk ->
+    a.skf
+      (fun x fk' ->
+        let sk' y fk' = sk (x,y) fk' in
+        b.skf sk' fk')
+      fk)
+  }
+
 let fmap c f =
   bind c
     (fun x -> match f x with
