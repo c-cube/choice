@@ -96,6 +96,9 @@ val delay : (unit -> 'a t) -> 'a t
 val fail : 'a t
   (** Fail to yield a solution. *)
 
+val cons : 'a -> 'a t -> 'a t
+  (** [cons x c] is a shortcut for [return x ++ c] *)
+
 val mplus : 'a t -> 'a t -> 'a t
   (** [mplus a b] enumerates choices from [a], then choices from [b]. *)
 
@@ -189,12 +192,35 @@ val (<|>) : 'a t -> 'a t -> 'a t
 (** {2 Enumerator} *)
 
 module Enum : sig
-  type 'a t =
-    | End
-    | Item of ('a * 'a t) choice
+  type 'a t
     (** Enumerate values of type 'a, with a choice point for each value *)
 
+  type 'a item =
+    | End
+    | Item of 'a * 'a t
+
+  val next : 'a t -> 'a item choice
+    (** choose the next element *)
+
+  val empty : 'a t
+    (** Empty iterator *)
+
+  val cons : 'a choice -> 'a t -> 'a t
+    (** Add an element at the head of the list *)
+
+  val cons1 : 'a -> 'a t -> 'a t
+    (** deterministic cons *)
+
+  val of_list : 'a list -> 'a t
+    (** Simply enumerate the elements of the list *)
+
+  val zip : 'a t -> 'b t -> ('a * 'b) t
+    (** Combine every element of the first enumeration with every
+        element at the same position in the second enumeration.
+        The result always ends at soon as one of the enumeration ends *)
+
   val to_lists : 'a t -> 'a list list
+    (** Conversion to a list of possibilies *)
 end
 
 (** {2 More complex Combinators} *)
@@ -205,5 +231,8 @@ module List : sig
 
   val permute : 'a list -> 'a Enum.t
     (** Enumerate the items of the list in any order *)
+
+  val combinations : int -> 'a list -> 'a Enum.t
+    (** Combinations of [n] elements of the list *)
 end
 

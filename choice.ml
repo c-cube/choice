@@ -44,6 +44,9 @@ let return x = { skf = (fun sk fk -> sk x fk) }
 
 let fail = { skf = fun sk fk -> fk () }
 
+let cons x c =
+  { skf = fun sk fk -> sk x (fun () -> c.skf sk fk) }
+
 let mplus a b =
   { skf=(fun sk fk ->
     let fk' () = b.skf sk fk in  (* on failure of a, try b *)
@@ -234,21 +237,48 @@ let liftFair2 f a b =
   a >>- fun x -> b >>- fun y -> return (f x y)
 
 module Enum = struct
-  type 'a t =
-    | End
-    | Item of ('a * 'a t) choice
-    (** Enumerate values of type 'a, with a choice point for each value *)
+  type 'a t = 'a item choice
 
-  let to_lists t =
-    let rec iter acc curlist t = match t with
-      | End -> curlist::acc
-      | Item choices ->
-          fold
-            (fun acc (x,t') ->
-              iter acc (x::curlist) t')
-            acc choices
+  and 'a item =
+    | End
+    | Item of 'a * 'a t
+
+  let next e = e
+
+  let empty = return End
+
+  let cons1 x e = {
+    skf=fun sk fk -> sk (Item (x,e)) fk
+  }
+
+  let cons head e = {
+    skf= fun sk fk ->
+      head.skf
+        (fun x fk -> sk (Item (x, e)) fk)
+        fk
+  }
+
+  let rec of_list l = match l with
+    | [] -> return End
+    | x :: l' ->
+        return (Item (x, of_list l'))
+
+  let rec zip a b =
+    lift2
+      (fun x y -> match x, y with
+        | Item (xa, a'), Item (xb, b') ->
+            Item ((xa,xb), zip a' b')
+        | End, _
+        | _, End -> End
+      ) a b 
+
+  let to_lists e =
+    let rec iter curlist e =
+      e >>= function
+        | End -> return (List.rev curlist)
+        | Item (x, e') -> iter (x::curlist) e'
     in
-    iter [] [] t
+    fold (fun acc l -> l :: acc) [] (iter [] e)
 end
 
 module List = struct
@@ -260,15 +290,28 @@ module List = struct
   let permute l =
     (* choose element among [l]. [rest] is elements not to choose from *)
     let rec choose_first l rest = match l with
-      | [] -> fail
+      | [] -> return Enum.End
       | x::l' ->
-        return (x, permute_rec (List.rev_append rest l'))
-        ++
-        choose_first l' (x::rest)
+        cons
+          (Enum.Item (x, permute_rec (List.rev_append rest l')))
+          (choose_first l' (x::rest))
     and permute_rec l = match l with
-      | [] -> Enum.End
-      | _::_ ->
-          Enum.Item (choose_first l [])
+      | [] -> fail
+      | _::_ -> choose_first l []
     in
     permute_rec l
+
+  let combinations n l =
+    let m = List.length l in
+    (* choose [n] elements among the [m] ones of [l] *)
+    let rec choose_first n m l = match l with
+      | _ when n > m -> fail
+      | _ when n=m -> Enum.of_list l
+      | [] -> fail
+      | x :: l' ->
+          cons
+            (Enum.Item (x, choose_first (n-1)(m-1) l'))
+            (choose_first n (m-1) l')
+    in
+    choose_first n m l
 end
