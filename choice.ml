@@ -301,6 +301,26 @@ module Enum = struct
           conv (x::acc) e'
     in conv [] e
 
+    (*
+  let to_lists e =
+    let rec next acc e =
+      e.skf
+        (fun item fk1 ->
+          match item with
+          | End ->
+            {
+              skf=fun sk fk -> sk (List.rev acc) (fun () -> (fk1()).skf sk fk)
+            }
+          | Item (x, e_sub) ->
+              next (x::acc) e_sub
+              ++
+              fk1()
+        )
+        (fun () -> fail)
+    in
+    next [] e
+    *)
+
   let to_list_list e =
     to_list (to_lists e)
 end
@@ -311,27 +331,41 @@ module List = struct
     | _::l' ->
         { skf=(fun sk fk -> sk l (fun () -> (suffixes l').skf sk fk)); }
 
+  type 'a tree =
+    | Empty
+    | Leaf of 'a
+    | Node of 'a tree * 'a tree
+
+  let rec _tree_of_list = function
+    | [] -> Empty
+    | x :: l' -> Node (Leaf x, _tree_of_list l')
+
+  let _end = return Enum.End
+
+  (* choose element among [t]. [rest] is elements not to choose from *)
+  let rec choose_first rest t = match t with
+    | Empty ->
+        begin match rest with
+        | Empty -> _end
+        | Leaf _
+        | Node _ -> fail
+        end
+    | Leaf x -> return (Enum.Item (x, permute_rec rest))
+    | Node (l, r) ->
+        (choose_first (Node (rest, r)) l)
+        ++
+        (choose_first (Node (l, rest)) r)
+  and permute_rec = function
+    | Empty -> return Enum.End
+    | Leaf x -> return (Enum.Item (x, _end))
+    | Node (l, r) ->
+        choose_first l r
+        ++
+        choose_first r l
+
   let permutations l =
-    (* choose element among [l]. [rest] is elements not to choose from *)
-    let rec choose_first l rest = match l with
-      | [] ->
-          begin match rest with
-          | [] -> return Enum.End
-          | _ -> permute_rec rest
-          end
-      | [x] ->
-        return (Enum.Item (x, permute_rec rest))
-      | x::l' ->
-        let tail1 = lazy (permute_rec (List.rev_append rest l')) in
-        {skf=fun sk fk ->
-          sk (Enum.Item (x, Lazy.force tail1))
-            (fun () -> (choose_first l' (x::rest)).skf sk fk)
-        }
-    and permute_rec l = match l with
-      | [] -> return Enum.End
-      | _::_ -> choose_first l []
-    in
-    permute_rec l
+    let tree = _tree_of_list l in
+    permute_rec tree
 
   let combinations n l =
     let m = List.length l in
@@ -346,4 +380,48 @@ module List = struct
             (choose_first n (m-1) l')
     in
     choose_first n m l
+end
+
+module Array = struct
+  (** describes a set of indices to yield *)
+  type tree =
+    | Empty
+    | Leaf of int
+    | Node of tree * tree
+
+  let _tree_of_len n =
+    let t = ref Empty in
+    for i = n-1 downto 0 do
+      t := Node (Leaf i, !t)
+    done;
+    !t
+
+  let _end = return Enum.End
+
+  (* choose element among [t]. [rest] is elements not to choose from *)
+  let rec choose_first a rest t = match t with
+    | Empty ->
+        begin match rest with
+        | Empty -> _end
+        | Leaf _
+        | Node _ -> fail
+        end
+    | Leaf i -> return (Enum.Item (a.(i), permute_rec a rest))
+    | Node (l, r) ->
+        (choose_first a (Node (rest, r)) l)
+        ++
+        (choose_first a (Node (l, rest)) r)
+  and permute_rec a = function
+    | Empty -> return Enum.End
+    | Leaf i -> return (Enum.Item (a.(i), _end))
+    | Node (l, r) ->
+        choose_first a l r
+        ++
+        choose_first a r l
+
+  let permutations a =
+    let tree = _tree_of_len (Array.length a) in
+    permute_rec a tree
+
+  let combinations a = assert false
 end

@@ -252,3 +252,8 @@ module List : sig
     (** Combinations of [n] elements of the list *)
 end
 
+module Array : sig
+  val permutations : 'a array -> 'a Enum.t
+
+  val combinations : int -> 'a array -> 'a Enum.t
+end
