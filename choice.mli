@@ -147,6 +147,13 @@ val iter : 'a t -> ('a -> bool) -> unit
   (** Enumerate solutions, until none remains, or the callback returns [false]
       to signal it has had enough solutions *)
 
+val is_empty : _ t -> bool
+  (** return [true] iff the alternative stream is empty (failure) *)
+
+val forall : bool t -> bool
+
+val exists : bool t -> bool
+
 (** {2 Monadic operators} *)
 
 val lift : ('a -> 'b) -> 'a t -> 'b t
@@ -159,16 +166,27 @@ val liftFair2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
 
 (** {2 Infix operators} *)
 
-module Infix : sig
-  val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
-    (** Infix version of {! bind} *)
+val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
+  (** Infix version of {! bind} *)
 
-  val (>>-) : 'a t -> ('a -> 'b t) -> 'b t
-    (** Infix version of {! fair_bind} *)
+val (>>-) : 'a t -> ('a -> 'b t) -> 'b t
+  (** Infix version of {! fair_bind} *)
 
-  val (++) : 'a t -> 'a t -> 'a t
-    (** Infix version of {! mplus} *)
+val (++) : 'a t -> 'a t -> 'a t
+  (** Infix version of {! mplus} *)
 
-  val (<|>) : 'a t -> 'a t -> 'a t
-    (** Infix version of {! interleave} *)
+val (<|>) : 'a t -> 'a t -> 'a t
+  (** Infix version of {! interleave} *)
+
+(** {2 More complex Combinators} *)
+
+module List : sig
+  val suffixes : 'a list -> 'a list t
+    (** Suffixes of the list *)
+
+  val choose : ('a -> 'b t -> 'b t) -> 'b t -> 'a list -> 'b t
+    (** [choose f last l] calls [f x others] where [x] is an element of [l],
+        and [others] is the remaining choices.
+        [last] is used when the list is empty. *)
 end
+

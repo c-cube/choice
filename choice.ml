@@ -191,14 +191,23 @@ let run_all c =
     (fun () -> ());
   !l
 
-module Infix = struct
-  let (>>=) = bind
-  let (>>-) = fair_bind
-  let (++) = mplus
-  let (<|>) = interleave
-end
+let is_empty c =
+  c.skf (fun _ _ -> false) (fun () -> true)
 
-open Infix
+let forall c =
+  c.skf
+    (fun ans fk -> if ans then fk () else false)
+    (fun () -> true)
+
+let exists c =
+  c.skf
+    (fun ans fk -> if ans then true else fk())
+    (fun () -> false)
+
+let (>>=) = bind
+let (>>-) = fair_bind
+let (++) = mplus
+let (<|>) = interleave
 
 let lift f c =
   c >>= fun x -> return (f x)
@@ -211,3 +220,12 @@ let liftFair f c =
 
 let liftFair2 f a b =
   a >>- fun x -> b >>- fun y -> return (f x y)
+
+module List = struct
+  let rec suffixes l = match l with
+    | [] -> return []
+    | _::l' ->
+        { skf=(fun sk fk -> sk l (fun () -> (suffixes l').skf sk fk)); }
+
+  let rec choose f last l = assert false 
+end
