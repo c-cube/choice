@@ -53,21 +53,22 @@ let mplus a b =
     a.skf sk fk')
   }
 
-let of_list l = match l with
+let rec of_list l = match l with
   | [] -> fail
-  | x::l' ->
-    List.fold_left (fun acc x -> mplus acc (return x)) (return x) l'
+  | x :: l' ->
+    { skf=fun sk fk ->
+      sk x (fun () -> (of_list l').skf sk fk)
+    }
 
 let delay f =
   { skf=(fun sk fk -> (f ()).skf sk fk) }
 
-let bind x f =
-  { skf=
-    (fun sk fk ->
-      x.skf (fun val_x fk -> (f val_x).skf sk fk) fk)
+let bind f x =
+  { skf=fun sk fk ->
+      x.skf (fun val_x fk -> (f val_x).skf sk fk) fk
   }
 
-let (>>=) = bind
+let (>>=) x f = bind f x
 
 let rec from_fun f =
   match f () with
@@ -78,7 +79,8 @@ let rec from_fun f =
       sk x fk')
     }
 
-(* reflect operator, the inverse of msplit *)
+(* reflect operator, the inverse of msplit. It appends the first
+ * element (if any) to the remaining ones *)
 let reflect opt = match opt with
   | None -> fail
   | Some (x, c) ->
@@ -90,9 +92,9 @@ let reflect opt = match opt with
 (* msplit operator, the base for other combinators. It returns
     the first solution, if any. *)
 let msplit (a : 'a t) : ('a * 'a t) option t =
-  let fk () = return None in
-  let sk x fk = return (Some (x, fk () >>= reflect)) in
-  a.skf sk fk
+  a.skf
+    (fun x fk -> return (Some (x, fk () >>= reflect)))
+    (fun () -> return None)
 
 let rec interleave a b =
   msplit a >>= function
@@ -104,11 +106,11 @@ let rec interleave a b =
       sk val_a fk')
     }
   
-let rec fair_bind x f =
+let rec fair_bind f x =
   msplit x >>= function
   | None -> fail
   | Some (val_x, x') ->
-    interleave (f val_x) (fair_bind x' f)
+    interleave (f val_x) (fair_bind f x')
 
 let ite c th el =
   msplit c >>= function
@@ -116,7 +118,7 @@ let ite c th el =
   | Some (val_c, c') ->
     mplus (th val_c) (c' >>= th)
 
-let map c f =
+let map f c =
   {skf=(fun sk fk -> c.skf (fun x -> sk (f x)) fk)}
 
 let product a b =
@@ -128,20 +130,25 @@ let product a b =
       fk)
   }
 
-let fmap c f =
-  bind c
-    (fun x -> match f x with
-    | None -> fail
-    | Some y -> return y)
+let fmap f c = {
+  skf=fun sk fk ->
+    c.skf (fun x fk -> match f x with
+      | Some x -> sk x fk
+      | None -> fk()
+    ) fk
+}
 
-let filter c p =
-  c >>= fun val_c -> if p val_c then return val_c else fail
+let filter p c = {
+  skf=fun sk fk ->
+    c.skf
+    (fun x fk -> if p x then sk x fk else fk())
+    fk
+}
 
-let once a =
-  msplit a >>= function
-  | None -> fail
-  | Some (val_c, _) ->
-    return val_c
+let once a = {
+  skf=fun sk fk ->
+    a.skf (fun x _fk -> sk x fk) fk
+}
 
 let rec take n c = match n with
   | 0 -> fail
@@ -154,31 +161,17 @@ let rec take n c = match n with
       mplus (return val_c) (take (n-1) c')
 
 let run_one c =
-  let r = ref None in
-  try
-    c.skf
-      (fun val_c _ ->
-        r := Some val_c;
-        raise Exit)
-      (fun () -> ());
-    !r
-  with Exit ->
-    !r
+  c.skf (fun x _ -> Some x) (fun () -> None)
 
 let run_n n c =
-  if n = 0
-    then []
-    else begin
-      let l = ref []
-      and n = ref n in
-      c.skf
-        (fun val_c fk ->
-          l := val_c :: !l;
-          decr n;
-          if !n = 0 then () else fk ())
-        (fun () -> ());
-      !l
-    end
+  let l = ref []
+  and n = ref n in
+  c.skf
+    (fun val_c fk ->
+      l := val_c :: !l;
+      decr n;
+      if !n = 0 then !l else fk ())
+    (fun () -> !l)
 
 let iter c k =
   c.skf
@@ -195,14 +188,11 @@ let fold f acc c =
       fk ())
     (fun () -> !acc)
 
-let run_all c =
-  let l = ref [] in
-  c.skf
-    (fun val_c fk ->
-      l := val_c :: !l;
-      fk ())
-    (fun () -> ());
-  !l
+let count c =
+  let n = ref 0 in
+  c.skf (fun _ fk -> incr n; fk ()) (fun () -> !n)
+
+let run_all c = fold (fun acc x -> x::acc) [] c
 
 let to_list c = List.rev (run_all c)
 
@@ -219,22 +209,43 @@ let exists c =
     (fun ans fk -> if ans then true else fk())
     (fun () -> false)
 
-let (>>=) = bind
-let (>>-) = fair_bind
+let (>>-) x f = fair_bind f x
 let (++) = mplus
 let (<|>) = interleave
 
-let lift f c =
-  c >>= fun x -> return (f x)
+let lift f c = {
+  skf=fun sk fk ->
+    c.skf (fun x fk -> sk (f x) fk) fk
+}
 
-let lift2 f a b =
-  a >>= fun x -> b >>= fun y -> return (f x y)
+let lift2 f a b = {
+  skf=fun sk fk ->
+    a.skf
+      (fun xa fk ->
+        b.skf (fun xb fk -> sk (f xa xb) fk) fk
+      )
+    fk
+}
 
 let liftFair f c =
   c >>- fun x -> return (f x)
 
 let liftFair2 f a b =
   a >>- fun x -> b >>- fun y -> return (f x y)
+
+let pure = return
+
+let app f_gen x_gen = {
+  skf=fun sk fk ->
+    f_gen.skf
+      (fun f fk ->
+        x_gen.skf
+          (fun x fk -> sk (f x) fk)
+          fk
+      ) fk
+}
+
+let ($$) = app
 
 module Enum = struct
   type 'a t = 'a item choice
@@ -272,13 +283,26 @@ module Enum = struct
         | _, End -> End
       ) a b 
 
+  let count e =
+    let n = ref 0 in
+    let rec count e =
+      e.skf
+        (fun x fk -> match x with
+          | End -> incr n
+          | Item (_, e') -> count e'; fk ())
+        (fun () -> ())
+    in count e; !n
+
   let to_lists e =
-    let rec iter curlist e =
+    let rec conv acc e =
       e >>= function
-        | End -> return (List.rev curlist)
-        | Item (x, e') -> iter (x::curlist) e'
-    in
-    fold (fun acc l -> l :: acc) [] (iter [] e)
+      | End -> return (List.rev acc)
+      | Item (x, e') ->
+          conv (x::acc) e'
+    in conv [] e
+
+  let to_list_list e =
+    to_list (to_lists e)
 end
 
 module List = struct
@@ -287,16 +311,24 @@ module List = struct
     | _::l' ->
         { skf=(fun sk fk -> sk l (fun () -> (suffixes l').skf sk fk)); }
 
-  let permute l =
+  let permutations l =
     (* choose element among [l]. [rest] is elements not to choose from *)
     let rec choose_first l rest = match l with
-      | [] -> return Enum.End
+      | [] ->
+          begin match rest with
+          | [] -> return Enum.End
+          | _ -> permute_rec rest
+          end
+      | [x] ->
+        return (Enum.Item (x, permute_rec rest))
       | x::l' ->
-        cons
-          (Enum.Item (x, permute_rec (List.rev_append rest l')))
-          (choose_first l' (x::rest))
+        let tail1 = lazy (permute_rec (List.rev_append rest l')) in
+        {skf=fun sk fk ->
+          sk (Enum.Item (x, Lazy.force tail1))
+            (fun () -> (choose_first l' (x::rest)).skf sk fk)
+        }
     and permute_rec l = match l with
-      | [] -> fail
+      | [] -> return Enum.End
       | _::_ -> choose_first l []
     in
     permute_rec l

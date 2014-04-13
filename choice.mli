@@ -38,8 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     We adapt the example from the LogicT paper.
 
-{[open Infix;;
-let rec insert e l = match l with
+{[let rec insert e l = match l with
   | [] -> return [e]
   | x::l' ->
     mplus
@@ -58,7 +57,7 @@ let rec sorted l = match l with
     x <= y && sorted l;;
 
 let bogosort l =
-  once (filter (permute l) sorted);;
+  once (filter sorted (permute l));;
   ]}
 
   Then, running
@@ -102,7 +101,7 @@ val cons : 'a -> 'a t -> 'a t
 val mplus : 'a t -> 'a t -> 'a t
   (** [mplus a b] enumerates choices from [a], then choices from [b]. *)
 
-val bind : 'a t -> ('a -> 'b t) -> 'b t
+val bind : ('a -> 'b t) -> 'a t -> 'b t
   (** Monadic bind. Each solution of the first argument is given to the
       function, that may in turn return several choices. *)
 
@@ -110,7 +109,7 @@ val interleave : 'a t -> 'a t -> 'a t
   (** Same as {!mplus}, but fair, ie it enumerates solutions
       alternatively from its first and second arguments. *)
 
-val fair_bind : 'a t -> ('a -> 'b t) -> 'b t
+val fair_bind : ('a -> 'b t) -> 'a t -> 'b t
   (** Fair version of {!bind}. *)
 
 val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
@@ -118,21 +117,21 @@ val ite : 'a t -> ('a -> 'b t) -> 'b t -> 'b t
       then it behaves like [el], otherwise each solution of [cond] is
       given to [th]. *)
 
-val map : 'a t -> ('a -> 'b) -> 'b t
+val map : ('a -> 'b) -> 'a t -> 'b t
   (** Map solutions to other solutions *)
 
 val product : 'a t -> 'b t -> ('a * 'b) t
   (** Cartesian product of two choices *)
 
-val fmap : 'a t -> ('a -> 'b option) -> 'b t
+val fmap : ('a -> 'b option) -> 'a t -> 'b t
   (** Special case of {! bind}, with only zero or one possible
       output choices for each input choice. *)
 
-val filter : 'a t -> ('a -> bool) -> 'a t
+val filter : ('a -> bool) -> 'a t -> 'a t
   (** Only keep the solutions that satisfy the given predicate. *)
 
 val once : 'a t -> 'a t
-  (** Retain at most one solution. *)
+  (** Retain at most one solution (drop alternatives). *)
 
 val take : int -> 'a t -> 'a t
   (** Retain at most [n] solutions *)
@@ -158,6 +157,9 @@ val iter : 'a t -> ('a -> bool) -> unit
 val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
   (** Fold over all solutions *)
 
+val count : _ t -> int
+  (** Number of solutions *)
+
 val is_empty : _ t -> bool
   (** return [true] iff the alternative stream is empty (failure) *)
 
@@ -174,6 +176,14 @@ val lift2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
 val liftFair : ('a -> 'b) -> 'a t -> 'b t
 
 val liftFair2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+
+val pure : ('a -> 'b) -> ('a -> 'b) t
+
+val app : ('a -> 'b) t -> 'a t -> 'b t
+  (** Applicative instance *)
+
+val ($$) : ('a -> 'b) t -> 'a t -> 'b t
+  (** Shortcut for {!app} *)
 
 (** {2 Infix operators} *)
 
@@ -219,7 +229,13 @@ module Enum : sig
         element at the same position in the second enumeration.
         The result always ends at soon as one of the enumeration ends *)
 
-  val to_lists : 'a t -> 'a list list
+  val count : _ t -> int
+    (** Number of distincts enumerations *)
+
+  val to_lists : 'a t -> 'a list choice
+    (** Conversion to a choice of lists *)
+
+  val to_list_list : 'a t -> 'a list list
     (** Conversion to a list of possibilies *)
 end
 
@@ -229,7 +245,7 @@ module List : sig
   val suffixes : 'a list -> 'a list t
     (** Suffixes of the list *)
 
-  val permute : 'a list -> 'a Enum.t
+  val permutations : 'a list -> 'a Enum.t
     (** Enumerate the items of the list in any order *)
 
   val combinations : int -> 'a list -> 'a Enum.t
