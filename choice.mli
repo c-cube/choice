@@ -70,6 +70,8 @@ let bogosort l =
 type 'a t
   (** A choice among values of type 'a *)
 
+type 'a choice = 'a t
+
 (** {2 Combinators} *)
 
 val return : 'a -> 'a t
@@ -143,9 +145,15 @@ val run_n : int -> 'a t -> 'a list
 val run_all : 'a t -> 'a list
   (** All the solutions (in reverse order) *)
 
+val to_list : 'a t -> 'a list
+  (** All the solutions (in correct order) *)
+
 val iter : 'a t -> ('a -> bool) -> unit
   (** Enumerate solutions, until none remains, or the callback returns [false]
       to signal it has had enough solutions *)
+
+val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
+  (** Fold over all solutions *)
 
 val is_empty : _ t -> bool
   (** return [true] iff the alternative stream is empty (failure) *)
@@ -178,15 +186,24 @@ val (++) : 'a t -> 'a t -> 'a t
 val (<|>) : 'a t -> 'a t -> 'a t
   (** Infix version of {! interleave} *)
 
+(** {2 Enumerator} *)
+
+module Enum : sig
+  type 'a t =
+    | End
+    | Item of ('a * 'a t) choice
+    (** Enumerate values of type 'a, with a choice point for each value *)
+
+  val to_lists : 'a t -> 'a list list
+end
+
 (** {2 More complex Combinators} *)
 
 module List : sig
   val suffixes : 'a list -> 'a list t
     (** Suffixes of the list *)
 
-  val choose : ('a -> 'b t -> 'b t) -> 'b t -> 'a list -> 'b t
-    (** [choose f last l] calls [f x others] where [x] is an element of [l],
-        and [others] is the remaining choices.
-        [last] is used when the list is empty. *)
+  val permute : 'a list -> 'a Enum.t
+    (** Enumerate the items of the list in any order *)
 end
 

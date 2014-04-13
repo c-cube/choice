@@ -38,6 +38,8 @@ and ('a,'b) sk = 'a -> 'b fk -> 'b
 (** Failure continuation *)
 and 'a fk = unit -> 'a
 
+type 'a choice = 'a t
+
 let return x = { skf = (fun sk fk -> sk x fk) }
 
 let fail = { skf = fun sk fk -> fk () }
@@ -182,6 +184,14 @@ let iter c k =
       if continue then fk () else ())
     (fun () -> ())
 
+let fold f acc c =
+  let acc = ref acc in
+  c.skf
+    (fun x fk ->
+      acc := f !acc x;
+      fk ())
+    (fun () -> !acc)
+
 let run_all c =
   let l = ref [] in
   c.skf
@@ -190,6 +200,8 @@ let run_all c =
       fk ())
     (fun () -> ());
   !l
+
+let to_list c = List.rev (run_all c)
 
 let is_empty c =
   c.skf (fun _ _ -> false) (fun () -> true)
@@ -221,11 +233,42 @@ let liftFair f c =
 let liftFair2 f a b =
   a >>- fun x -> b >>- fun y -> return (f x y)
 
+module Enum = struct
+  type 'a t =
+    | End
+    | Item of ('a * 'a t) choice
+    (** Enumerate values of type 'a, with a choice point for each value *)
+
+  let to_lists t =
+    let rec iter acc curlist t = match t with
+      | End -> curlist::acc
+      | Item choices ->
+          fold
+            (fun acc (x,t') ->
+              iter acc (x::curlist) t')
+            acc choices
+    in
+    iter [] [] t
+end
+
 module List = struct
   let rec suffixes l = match l with
     | [] -> return []
     | _::l' ->
         { skf=(fun sk fk -> sk l (fun () -> (suffixes l').skf sk fk)); }
 
-  let rec choose f last l = assert false 
+  let permute l =
+    (* choose element among [l]. [rest] is elements not to choose from *)
+    let rec choose_first l rest = match l with
+      | [] -> fail
+      | x::l' ->
+        return (x, permute_rec (List.rev_append rest l'))
+        ++
+        choose_first l' (x::rest)
+    and permute_rec l = match l with
+      | [] -> Enum.End
+      | _::_ ->
+          Enum.Item (choose_first l [])
+    in
+    permute_rec l
 end
