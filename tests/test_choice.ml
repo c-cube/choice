@@ -1,7 +1,6 @@
 open OUnit
 
 module C = Choice
-open Choice.Infix
 
 let printer l =
   let b = Buffer.create 5 in
@@ -36,7 +35,7 @@ let test_from_fun () =
 
 let test_bind () =
   let c1 = C.of_list [1;3] in
-  let c2 = c1 >>= fun x -> C.of_list [x; x+1] in
+  let c2 = C.(c1 >>= fun x -> C.of_list [x; x+1]) in
   let l = List.sort compare (C.run_all c2) in
   OUnit.assert_equal ~printer [1;2;3;4] l
 
@@ -61,7 +60,7 @@ let test_ite2 () =
 
 let test_map () =
   let c = C.of_list [1;2;3;4;5] in
-  let c' = C.map c succ in
+  let c' = C.map succ c in
   let l = List.sort compare (C.run_all c') in
   OUnit.assert_equal ~printer [2;3;4;5;6] l
 
