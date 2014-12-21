@@ -21,6 +21,9 @@ clean:
 tests:
 	ocamlbuild -package oUnit $(OPTIONS) tests/run_tests.native
 
+bench:
+	ocamlbuild -I src $(OPTIONS) -package containers tests/bench.native
+
 install:
 	ocamlfind install choice META $(INSTALL)
 
