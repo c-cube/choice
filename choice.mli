@@ -85,8 +85,9 @@ val from_fun : (unit -> 'a option) -> 'a t
       Example:
       {[let r = ref 0 in Choice.run_n 10
         (Choice.filter
-          (Choice.from_fun (fun () -> incr r; Some !r)) (fun x -> x mod 3 = 0));;
-      - : int list = [30; 27; 24; 21; 18; 15; 12; 9; 6; 3] ]} *)
+          (Choice.from_fun (fun () -> incr r; Some !r)) (fun x -> x mod 3 = 0));;]}
+      yields
+      {[- : int list = [30; 27; 24; 21; 18; 15; 12; 9; 6; 3] ]} *)
 
 val delay : (unit -> 'a t) -> 'a t
   (** Delay the computation (the closure will be called in each branch
