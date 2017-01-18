@@ -1,9 +1,10 @@
 INTERFACE_FILES = $(shell find -name '*.mli')
 IMPLEMENTATION_FILES = $(shell find -name '*.ml')
 
+CMT_FILES = $(wildcard _build/*.cmt) $(wildcard _build/*.cmti)
 TARGETS_LIB = choice.cmxa choice.cma choice.a choice.cmi choice.cmxs
 TARGETS_DOC = choice.docdir/index.html
-INSTALL = $(addprefix _build/, $(TARGETS_LIB)) choice.mli
+INSTALL = $(addprefix _build/, $(TARGETS_LIB)) $(CMT_FILES) choice.mli
 
 OPTIONS = -use-ocamlfind
 	
