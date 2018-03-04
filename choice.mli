@@ -96,6 +96,9 @@ val delay : (unit -> 'a t) -> 'a t
 val fail : 'a t
   (** Fail to yield a solution. *)
 
+val guard: bool -> unit t
+  (** Fails if condition does not hold *)
+
 val cons : 'a -> 'a t -> 'a t
   (** [cons x c] is a shortcut for [return x ++ c] *)
 

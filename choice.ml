@@ -247,6 +247,10 @@ let app f_gen x_gen = {
 
 let ($$) = app
 
+let guard = function
+    | true -> return ()
+    | false -> fail
+
 module Enum = struct
   type 'a t = 'a item choice
 
