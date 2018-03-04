@@ -1,10 +1,10 @@
-INTERFACE_FILES = $(shell find -name '*.mli')
-IMPLEMENTATION_FILES = $(shell find -name '*.ml')
+INTERFACE_FILES = $(shell find src -name '*.mli')
+IMPLEMENTATION_FILES = $(shell find src -name '*.ml')
 
-CMT_FILES = $(wildcard _build/*.cmt) $(wildcard _build/*.cmti)
-TARGETS_LIB = choice.cmxa choice.cma choice.a choice.cmi choice.cmxs
+CMT_FILES = $(wildcard _build/src/*.cmt) $(wildcard _build/src/*.cmti)
+TARGETS_LIB = $(addprefix src/, choice.cmxa choice.cma choice.a choice.cmi choice.cmxs)
 TARGETS_DOC = choice.docdir/index.html
-INSTALL = $(addprefix _build/, $(TARGETS_LIB)) $(CMT_FILES) choice.mli
+INSTALL = $(addprefix _build/, $(TARGETS_LIB)) $(CMT_FILES) $(IMPLEMENTATION_FILES) $(INTERFACE_FILES)
 
 OPTIONS = -use-ocamlfind
 	
@@ -34,7 +34,9 @@ push_doc: all
 uninstall:
 	ocamlfind remove choice
 
-tags:
-	otags *.ml *.mli
+reindent:
+	@which ocp-indent || ( echo "require ocp-indent" ; exit 1 )
+	@find src '(' -name '*.ml' -or -name '*.mli' ')' -type f -print0 | xargs -0 echo "reindenting: "
+	@find src '(' -name '*.ml' -or -name '*.mli' ')' -type f -print0 | xargs -0 ocp-indent -i
 
 .PHONY: all clean tests tags push_doc tests
