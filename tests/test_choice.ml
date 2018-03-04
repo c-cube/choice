@@ -70,6 +70,17 @@ let test_once () =
   let l = List.sort compare (C.run_all c') in
   OUnit.assert_equal ~printer [1] l
 
+let test_guard () = 
+  let computation = C.(
+      of_list [1;2;3] >>= fun x ->
+      guard (x != 2) >>= fun () ->
+      return x
+    )
+  in
+  let l = List.sort compare (C.run_all computation) in
+  OUnit.assert_equal ~printer [1;3] l
+
+
 let suite =
   "test_choice" >:::
     [ "test_return" >:: test_return
@@ -81,4 +92,5 @@ let suite =
     ; "test_ite2" >:: test_ite2
     ; "test_map" >:: test_map
     ; "test_once" >:: test_once
+    ; "test_guard" >:: test_guard
     ]
