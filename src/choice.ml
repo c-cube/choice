@@ -49,15 +49,15 @@ let cons x c =
 
 let mplus a b =
   { skf=(fun sk fk ->
-    let fk' () = b.skf sk fk in  (* on failure of a, try b *)
-    a.skf sk fk')
+        let fk' () = b.skf sk fk in  (* on failure of a, try b *)
+        a.skf sk fk')
   }
 
 let rec of_list l = match l with
   | [] -> fail
   | x :: l' ->
     { skf=fun sk fk ->
-      sk x (fun () -> (of_list l').skf sk fk)
+          sk x (fun () -> (of_list l').skf sk fk)
     }
 
 let delay f =
@@ -65,19 +65,19 @@ let delay f =
 
 let bind f x =
   { skf=fun sk fk ->
-      x.skf (fun val_x fk -> (f val_x).skf sk fk) fk
+        x.skf (fun val_x fk -> (f val_x).skf sk fk) fk
   }
 
 let (>>=) x f = bind f x
 
 let rec from_fun f =
   match f () with
-  | None -> fail
-  | Some x ->
-    { skf=(fun sk fk ->
-      let fk' () = (from_fun f).skf sk fk in
-      sk x fk')
-    }
+    | None -> fail
+    | Some x ->
+      { skf=(fun sk fk ->
+            let fk' () = (from_fun f).skf sk fk in
+            sk x fk')
+      }
 
 (* reflect operator, the inverse of msplit. It appends the first
  * element (if any) to the remaining ones *)
@@ -85,8 +85,8 @@ let reflect opt = match opt with
   | None -> fail
   | Some (x, c) ->
     { skf=(fun sk fk ->
-      let fk' () = c.skf sk fk in
-      sk x fk')
+          let fk' () = c.skf sk fk in
+          sk x fk')
     }
 
 (* msplit operator, the base for other combinators. It returns
@@ -102,10 +102,10 @@ let rec interleave a b =
   | Some (val_a, a') ->
     let c = interleave b a' in
     { skf=(fun sk fk ->
-      let fk' () = c.skf sk fk in
-      sk val_a fk')
+          let fk' () = c.skf sk fk in
+          sk val_a fk')
     }
-  
+
 let rec fair_bind f x =
   msplit x >>= function
   | None -> fail
@@ -123,11 +123,11 @@ let map f c =
 
 let product a b =
   {skf=(fun sk fk ->
-    a.skf
-      (fun x fk' ->
-        let sk' y fk' = sk (x,y) fk' in
-        b.skf sk' fk')
-      fk)
+      a.skf
+        (fun x fk' ->
+           let sk' y fk' = sk (x,y) fk' in
+           b.skf sk' fk')
+        fk)
   }
 
 let fmap f c = {
@@ -141,8 +141,8 @@ let fmap f c = {
 let filter p c = {
   skf=fun sk fk ->
     c.skf
-    (fun x fk -> if p x then sk x fk else fk())
-    fk
+      (fun x fk -> if p x then sk x fk else fk())
+      fk
 }
 
 let once a = {
@@ -168,24 +168,24 @@ let run_n n c =
   and n = ref n in
   c.skf
     (fun val_c fk ->
-      l := val_c :: !l;
-      decr n;
-      if !n = 0 then !l else fk ())
+       l := val_c :: !l;
+       decr n;
+       if !n = 0 then !l else fk ())
     (fun () -> !l)
 
 let iter c k =
   c.skf
     (fun val_c fk ->
-      let continue = k val_c in
-      if continue then fk () else ())
+       let continue = k val_c in
+       if continue then fk () else ())
     (fun () -> ())
 
 let fold f acc c =
   let acc = ref acc in
   c.skf
     (fun x fk ->
-      acc := f !acc x;
-      fk ())
+       acc := f !acc x;
+       fk ())
     (fun () -> !acc)
 
 let count c =
@@ -222,9 +222,9 @@ let lift2 f a b = {
   skf=fun sk fk ->
     a.skf
       (fun xa fk ->
-        b.skf (fun xb fk -> sk (f xa xb) fk) fk
+         b.skf (fun xb fk -> sk (f xa xb) fk) fk
       )
-    fk
+      fk
 }
 
 let liftFair f c =
@@ -239,17 +239,17 @@ let app f_gen x_gen = {
   skf=fun sk fk ->
     f_gen.skf
       (fun f fk ->
-        x_gen.skf
-          (fun x fk -> sk (f x) fk)
-          fk
+         x_gen.skf
+           (fun x fk -> sk (f x) fk)
+           fk
       ) fk
 }
 
 let ($$) = app
 
 let guard = function
-    | true -> return ()
-    | false -> fail
+  | true -> return ()
+  | false -> fail
 
 module Enum = struct
   type 'a t = 'a item choice
@@ -276,15 +276,15 @@ module Enum = struct
   let rec of_list l = match l with
     | [] -> return End
     | x :: l' ->
-        return (Item (x, of_list l'))
+      return (Item (x, of_list l'))
 
   let rec zip a b =
     lift2
       (fun x y -> match x, y with
-        | Item (xa, a'), Item (xb, b') ->
-            Item ((xa,xb), zip a' b')
-        | End, _
-        | _, End -> End
+         | Item (xa, a'), Item (xb, b') ->
+           Item ((xa,xb), zip a' b')
+         | End, _
+         | _, End -> End
       ) a b 
 
   let count e =
@@ -292,8 +292,8 @@ module Enum = struct
     let rec count e =
       e.skf
         (fun x fk -> match x with
-          | End -> incr n
-          | Item (_, e') -> count e'; fk ())
+           | End -> incr n
+           | Item (_, e') -> count e'; fk ())
         (fun () -> ())
     in count e; !n
 
@@ -302,7 +302,7 @@ module Enum = struct
       e >>= function
       | End -> return (List.rev acc)
       | Item (x, e') ->
-          conv (x::acc) e'
+        conv (x::acc) e'
     in conv [] e
 
     (*
@@ -333,7 +333,7 @@ module List = struct
   let rec suffixes l = match l with
     | [] -> return []
     | _::l' ->
-        { skf=(fun sk fk -> sk l (fun () -> (suffixes l').skf sk fk)); }
+      { skf=(fun sk fk -> sk l (fun () -> (suffixes l').skf sk fk)); }
 
   type 'a tree =
     | Empty
@@ -349,22 +349,22 @@ module List = struct
   (* choose element among [t]. [rest] is elements not to choose from *)
   let rec choose_first rest t = match t with
     | Empty ->
-        begin match rest with
+      begin match rest with
         | Empty -> _end
         | Leaf _
         | Node _ -> fail
-        end
+      end
     | Leaf x -> return (Enum.Item (x, permute_rec rest))
     | Node (l, r) ->
-        (choose_first (Node (rest, r)) l)
-        ++
+      (choose_first (Node (rest, r)) l)
+      ++
         (choose_first (Node (l, rest)) r)
   and permute_rec = function
     | Empty -> return Enum.End
     | Leaf x -> return (Enum.Item (x, _end))
     | Node (l, r) ->
-        choose_first l r
-        ++
+      choose_first l r
+      ++
         choose_first r l
 
   let permutations l =
@@ -379,9 +379,9 @@ module List = struct
       | _ when n=m -> Enum.of_list l
       | [] -> fail
       | x :: l' ->
-          cons
-            (Enum.Item (x, choose_first (n-1)(m-1) l'))
-            (choose_first n (m-1) l')
+        cons
+          (Enum.Item (x, choose_first (n-1)(m-1) l'))
+          (choose_first n (m-1) l')
     in
     choose_first n m l
 end
@@ -405,22 +405,22 @@ module Array = struct
   (* choose element among [t]. [rest] is elements not to choose from *)
   let rec choose_first a rest t = match t with
     | Empty ->
-        begin match rest with
+      begin match rest with
         | Empty -> _end
         | Leaf _
         | Node _ -> fail
-        end
+      end
     | Leaf i -> return (Enum.Item (a.(i), permute_rec a rest))
     | Node (l, r) ->
-        (choose_first a (Node (rest, r)) l)
-        ++
+      (choose_first a (Node (rest, r)) l)
+      ++
         (choose_first a (Node (l, rest)) r)
   and permute_rec a = function
     | Empty -> return Enum.End
     | Leaf i -> return (Enum.Item (a.(i), _end))
     | Node (l, r) ->
-        choose_first a l r
-        ++
+      choose_first a l r
+      ++
         choose_first a r l
 
   let permutations a =
