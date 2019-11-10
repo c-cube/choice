@@ -136,6 +136,10 @@ val iter : 'a t -> ('a -> bool) -> unit
 (** Enumerate solutions, until none remains, or the callback returns [false]
     to signal it has had enough solutions *)
 
+val to_seq : 'a t -> 'a Seq.t
+(** Lazy iterator over the choices.
+    @since NEXT_RELEASE *)
+
 val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 (** Fold over all solutions *)
 

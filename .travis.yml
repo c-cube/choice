@@ -9,7 +9,6 @@ env:
   - DISTRO="ubuntu-16.04"
   - PACKAGE="choice"
   matrix:
-  - OCAML_VERSION="4.02.3"
   - OCAML_VERSION="4.03"
   - OCAML_VERSION="4.04"
   - OCAML_VERSION="4.06"

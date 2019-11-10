@@ -7,7 +7,7 @@
     (SKFT is Success Failure Kontinuation) *)
 type 'a t = {
   skf : 'b. ('a, 'b) sk -> 'b fk -> 'b;
-}
+} [@@unboxed]
 
 (** Success continuation *)
 and ('a,'b) sk = 'a -> 'b fk -> 'b
@@ -172,6 +172,15 @@ let count c =
 let run_all c = fold (fun acc x -> x::acc) [] c
 
 let to_list c = List.rev (run_all c)
+
+let to_seq (c:'a t) : 'a Seq.t =
+  let loop c () =
+    c.skf
+      (fun x fk ->
+         Seq.Cons (x, fk))
+      (fun () -> Seq.Nil)
+  in
+  loop c
 
 let is_empty c =
   c.skf (fun _ _ -> false) (fun () -> true)
