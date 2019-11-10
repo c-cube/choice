@@ -1,4 +1,0 @@
-#directory "_build";;
-#load "choice.cma";;
-(* vim:filetype=ocaml:
-*)
