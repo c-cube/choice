@@ -2,10 +2,8 @@ open OUnit
 
 module C = Choice
 
-let printer l =
-  let b = Buffer.create 5 in
-  List.iter (fun x -> Printf.bprintf b "%d " x) l;
-  Buffer.contents b
+let printer l =  "[" ^ String.concat ";" (List.map string_of_int l) ^ "]"
+let print_list_list l = "[" ^ String.concat ";" (List.map printer l) ^ "]"
 
 let test_return () =
   let c = C.mplus (C.return 1) (C.return 2) in
@@ -80,6 +78,30 @@ let test_guard () =
   let l = List.sort compare (C.run_all computation) in
   OUnit.assert_equal ~printer [1;3] l
 
+let test_permutations () =
+  let l = [1;2;3;4] in
+  let g = Gen.permutations (Gen.of_list l) in
+  OUnit.assert_equal ~printer:print_list_list
+    (Gen.to_rev_list g |> List.sort compare)
+    (Choice.List.permutations l |> Choice.Enum.to_list_list |> List.sort compare)
+
+let sort_list l = List.sort compare l
+
+let test_combinations_2 () =
+  let l = [1;2;3;4;5] in
+  let g = Gen.combinations 2 (Gen.of_list l) in
+  OUnit.assert_equal ~printer:print_list_list
+    (Gen.to_rev_list g |> List.rev_map sort_list |> sort_list)
+    (Choice.List.combinations 2 l |> Choice.Enum.to_list_list
+     |> List.rev_map sort_list |> sort_list)
+
+let test_combinations_3 () =
+  let l = [1;2;3;4;5] in
+  let g = Gen.combinations 3 (Gen.of_list l) in
+  OUnit.assert_equal ~printer:print_list_list
+    (Gen.to_rev_list g |> List.rev_map sort_list |> sort_list)
+    (Choice.List.combinations 3 l |> Choice.Enum.to_list_list
+     |> List.rev_map sort_list |> sort_list)
 
 let suite =
   "test_choice" >:::
@@ -93,4 +115,7 @@ let suite =
     ; "test_map" >:: test_map
     ; "test_once" >:: test_once
     ; "test_guard" >:: test_guard
+    ; "test_permutations" >:: test_permutations
+    ; "test_combinations_2" >:: test_combinations_2
+    ; "test_combinations_3" >:: test_combinations_3
     ]

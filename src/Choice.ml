@@ -373,45 +373,17 @@ module List = struct
 end
 
 module Array = struct
-  (** describes a set of indices to yield *)
-  type tree =
-    | Empty
-    | Leaf of int
-    | Node of tree * tree
-
-  let _tree_of_len n =
-    let t = ref Empty in
-    for i = n-1 downto 0 do
-      t := Node (Leaf i, !t)
+  let _tree_of_arr a : _ List.tree =
+    let t = ref List.Empty in
+    for i = Array.length a -1 downto 0 do
+      t := Node (Leaf a.(i), !t)
     done;
     !t
 
-  let _end = return Enum.End
-
-  (* choose element among [t]. [rest] is elements not to choose from *)
-  let rec choose_first a rest t = match t with
-    | Empty ->
-      begin match rest with
-        | Empty -> _end
-        | Leaf _
-        | Node _ -> fail
-      end
-    | Leaf i -> return (Enum.Item (a.(i), permute_rec a rest))
-    | Node (l, r) ->
-      (choose_first a (Node (rest, r)) l)
-      ++
-        (choose_first a (Node (l, rest)) r)
-  and permute_rec a = function
-    | Empty -> return Enum.End
-    | Leaf i -> return (Enum.Item (a.(i), _end))
-    | Node (l, r) ->
-      choose_first a l r
-      ++
-        choose_first a r l
-
   let permutations a =
-    let tree = _tree_of_len (Array.length a) in
-    permute_rec a tree
+    let tree = _tree_of_arr a in
+    List.permute_rec tree
 
-  let combinations _a = assert false
+  let combinations n a =
+    List.combinations n (Array.to_list a)
 end

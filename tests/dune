@@ -1,7 +1,7 @@
 
 (executable
   (name run_tests)
-  (libraries choice oUnit)
+  (libraries choice oUnit gen)
   (modules test_choice run_tests))
 
 (alias
