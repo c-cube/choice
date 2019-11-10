@@ -1,5 +1,4 @@
-Choice
-===========
+# Choice [![build status](https://travis-ci.org/c-cube/choice.svg?branch=master)](https://travis-ci.org/c-cube/choice) 
 
 Choice monad. See
 [the Haskell library](http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html)
