@@ -3,7 +3,7 @@ Choice
 
 Choice monad. See
 [the Haskell library](http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html)
-or [this paper](http://www.cs.rutgers.edu/~ccshan/logicprog/LogicT-icfp2005.pdf)
+or [this paper](http://homes.sice.indiana.edu/ccshan/logicprog/LogicT-icfp2005.pdf)
 
 See [online documentation](http://cedeela.fr/~simon/software/choice/Choice.html).
 
