@@ -14,7 +14,7 @@ let test_return () =
   
 let test_delay () =
   let r = ref 0 in
-  let rec generate () =
+  let generate () =
     incr r;
     C.return !r
   in

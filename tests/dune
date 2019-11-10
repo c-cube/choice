@@ -1,0 +1,9 @@
+
+(executable
+  (name run_tests)
+  (libraries choice oUnit)
+  (modules test_choice run_tests))
+
+(alias
+  (name runtest)
+  (action (run ./run_tests.exe)))

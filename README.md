@@ -5,7 +5,7 @@ Choice monad. See
 [the Haskell library](http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html)
 or [this paper](http://homes.sice.indiana.edu/ccshan/logicprog/LogicT-icfp2005.pdf)
 
-See [online documentation](http://cedeela.fr/~simon/software/choice/Choice.html).
+See [online documentation](https://c-cube.github.io/choice/).
 
 ## Example
 
@@ -25,7 +25,7 @@ val c3 : (int * string) Choice.t = <abstr>
 
 ## Build
 
-You need OCaml >= 4.00.1
+You need OCaml >= 4.02.0
 
     $ make
     $ make install

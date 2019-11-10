@@ -1,6 +1,0 @@
-name="choice"
-version="0.1"
-description="Backtracking monad"
-requires=""
-archive(byte) = "choice.cma"
-archive(native) = "choice.cmxa"
