@@ -75,7 +75,7 @@ val fail : 'a t
 
 val guard: bool -> unit t
 (** Fails if condition does not hold
-    @since NEXT_RELEASE *)
+    @since 0.4 *)
 
 val cons : 'a -> 'a t -> 'a t
 (** [cons x c] is a shortcut for [return x ++ c] *)
@@ -138,7 +138,7 @@ val iter : 'a t -> ('a -> bool) -> unit
 
 val to_seq : 'a t -> 'a Seq.t
 (** Lazy iterator over the choices.
-    @since NEXT_RELEASE *)
+    @since 0.4 *)
 
 val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 (** Fold over all solutions *)
