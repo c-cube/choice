@@ -11,6 +11,13 @@ watch:
 test:
 	@dune runtest --force --no-buffer
 
+doc:
+	@dune build @doc
+
+install: build
+	@dune build @install
+	@dune install
+
 reindent:
 	@which ocp-indent || ( echo "require ocp-indent" ; exit 1 )
 	@find src '(' -name '*.ml' -or -name '*.mli' ')' -type f -print0 | xargs -0 echo "reindenting: "

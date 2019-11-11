@@ -24,7 +24,7 @@ val c3 : (int * string) Choice.t = <abstr>
 
 ## Build
 
-You need OCaml >= 4.02.0
+You need OCaml >= 4.03.0 and dune.
 
     $ make
     $ make install
