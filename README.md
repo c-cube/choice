@@ -1,4 +1,4 @@
-# Choice [![build status](https://travis-ci.org/c-cube/choice.svg?branch=master)](https://travis-ci.org/c-cube/choice) 
+# Choice [![build](https://github.com/c-cube/choice/actions/workflows/main.yml/badge.svg)](https://github.com/c-cube/choice/actions/workflows/main.yml)
 
 Choice monad. See
 [the Haskell library](http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html)
