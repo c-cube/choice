@@ -1,6 +1,5 @@
-(* Copyright (c) 2013, Simon Cruanes *)
 
-(** {1 Backtracking monad} *)
+(** Backtracking monad *)
 
 (** This is an attempt to implement the Logic monad, as described
     in {{: http://hackage.haskell.org/packages/archive/logict/0.2.3/doc/html/Control-Monad-Logic.html}
@@ -39,7 +38,7 @@
 
     Then, running
     {[run_n 1 (bogosort [2;3;5;1;0]);; ]}
-    yields 
+    yields
     {[- : int list list = [[0; 1; 2; 3; 5]] ]}
 *)
 
@@ -187,6 +186,9 @@ val (<|>) : 'a t -> 'a t -> 'a t
 
 (** {2 Enumerator} *)
 
+(** Enumerator.
+
+    Allows one to enumerate values from a ['a t], on demand. *)
 module Enum : sig
   type 'a t
   (** Enumerate values of type 'a, with a choice point for each value *)
@@ -227,6 +229,7 @@ end
 
 (** {2 More complex Combinators} *)
 
+(** Backtrack on lists *)
 module List : sig
   val suffixes : 'a list -> 'a list t
   (** Suffixes of the list *)
@@ -238,6 +241,7 @@ module List : sig
   (** Combinations of [n] elements of the list *)
 end
 
+(** Backtrack on arrays *)
 module Array : sig
   val permutations : 'a array -> 'a Enum.t
 
